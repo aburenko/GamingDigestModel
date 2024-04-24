@@ -9,7 +9,7 @@ Plan:
   - mean sound power/s
   - (1 scaled image)/s
   - train-test-split: half-half depending on highlight dist.
-- model: ResNet50 for images with MLP head (including mean sound) (2h)
+- model: ResNet50 for images with MLP head (including mean sound) (2h) https://pytorch.org/vision/0.17/models/video_resnet.html
   - loss function: binary cross entropy function
   - eval metric: F1, Recall, Precision
  
