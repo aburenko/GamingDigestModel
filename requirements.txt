@@ -1,0 +1,4 @@
+pytube==15.0.0
+click
+torch
+torchvision
