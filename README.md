@@ -14,11 +14,19 @@ python prepare_video.py https://www.youtube.com/watch?v=kt8wMx_c22g br-stream
   ```bash
    python -m scalabel.tools.prepare_data -i ~/PycharmProjects/GamingDigestModel/data/br-stream.mp4 -o ./br-stream --fps 5 --url-root http://localhost:8686/items/br-stream 
   ```
-  - label (project setup is shown in misc/settings.png) and export the labels
-- todo
+  - label (project setup is shown in misc/settings.png) and save the labels into data 
+- run main.py
 
 ## Results
-todo
+I labeled highlight sequences for a 4.5h stream. Resulting labels can be found in data/. We deal with highly unbalanced data:
+
+Number of highlight frames: 4371
+Number of non-highlight frames: 79565
+Rate of highlights: 0.052
+Highlight count: 42
+
+
+
 
 ## Initial planning
 Plan:
