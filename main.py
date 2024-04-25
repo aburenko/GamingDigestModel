@@ -5,32 +5,32 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
-from torchvision.models import resnet18
+from torchvision.models import resnet18, ResNet18_Weights
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from PIL import Image
 
 
-class CNNLSTM(nn.Module):
+class HighlightModel(nn.Module):
 
-    def __init__(self, num_classes=2):
-        super(CNNLSTM, self).__init__()
-        self.resnet = resnet18(pretrained=True, num_classes=100)
-        self.lstm = nn.LSTM(input_size=100, hidden_size=256, num_layers=3, dropout=0.2)
+    def __init__(self):
+        super(HighlightModel, self).__init__()
+        self.resnet = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+        self.fc_to_lstm = nn.Linear(1000, 256)
+        self.lstm = nn.LSTM(input_size=256, hidden_size=256, num_layers=2, dropout=0.2, batch_first=True)
         self.fc1 = nn.Linear(256, 128)
-        self.fc2 = nn.Linear(128, num_classes)
+        self.fc2 = nn.Linear(128, 2)
+        self.hidden = None
 
     def forward(self, x):
-        """The inputs are batched images of size (batch_size, channels, height, width)"""
+        """The inputs are batched images of size (sequence size, channels, height, width)"""
         with torch.no_grad():
             x = self.resnet(x)
 
-        hidden = None
-        for batch_index in range(x.size(0)):
-            frame_features = x[batch_index]
-            out, hidden = self.lstm(frame_features.unsqueeze(0), hidden)
+        x = self.fc_to_lstm(x)
+        x, self.hidden = self.lstm(x, self.hidden)
 
-        x = self.fc1(out[-1, :, :])
+        x = self.fc1(x)
         x = F.relu(x)
         x = self.fc2(x)
         return x
@@ -40,6 +40,8 @@ class StreamDataset(Dataset):
 
     def __init__(self, root_dir, phase):
         self.images = np.load(Path(root_dir) / phase / "images.npy")
+        # paths from scalable are e.g.: http://localhost:8686/items/br-stream/br-stream/br-stream-0000012.jpg
+        self.images = [path.replace("http://localhost:8686/items/br-stream/", "~/data/") for path in self.images]
         self.labels = np.load(Path(root_dir) / phase / "labels.npy")
 
     def __len__(self):
@@ -57,7 +59,7 @@ def get_loaders(root="data"):
     return train_dataloader, test_dataloader
 
 
-def train(model: CNNLSTM, loader_train: DataLoader, loader_test: DataLoader):
+def train(model: HighlightModel, loader_train: DataLoader, loader_test: DataLoader):
     loss_fn = nn.BCELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
@@ -76,7 +78,7 @@ def train(model: CNNLSTM, loader_train: DataLoader, loader_test: DataLoader):
 
 
 if __name__ == '__main__':
-    model = CNNLSTM()
+    model = HighlightModel()
     print("Model loaded.")
     train_dl, test_dl = get_loaders("data")
     print("Initialized data loaders.")
