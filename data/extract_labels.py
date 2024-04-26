@@ -46,18 +46,36 @@ def extract_labels(input_file):
 
     labels = np.array(labels)
     stats(labels, highlight_count)
+    print(seq_indeces)
     split(images, labels, seq_indeces)
 
 
 def split(images, labels, indeces):
-    """10 last highlights are allocated for the test set."""
+    # 10 last highlights are allocated for the test set.
     last_train_index = indeces[-11][1]
-    save_images("train", images[:last_train_index], labels[:last_train_index])
     save_images("test", images[last_train_index:], labels[last_train_index:])
+    # We simplify train set to reduce number of not highlights in training data
+    train_cut_indeces = np.zeros_like(labels, dtype=int)
+    train_highlight_frame_count = 0
+    for index_pair in indeces[:-10]:
+        train_highlight_frame_count += index_pair[1] - index_pair[0]
+        start_index = index_pair[0] - minute_in_5fps_with_deviation()
+        end_index = index_pair[1] + minute_in_5fps_with_deviation()
+        train_cut_indeces[start_index: end_index] = 1
+    print(train_highlight_frame_count)
+    selection = train_cut_indeces == True
+    save_images("train", np.array(images)[selection], np.array(labels)[selection])
+
+
+def minute_in_5fps_with_deviation():
+    minute_in_5fps_frames = 300
+    np.random.seed(42)
+    return minute_in_5fps_frames + np.random.randint(-100, 300)
 
 
 def save_images(phase, images, labels):
     Path(phase).mkdir(exist_ok=True)
+    print(phase, "has", len(images), "instances")
     np.save(f"{phase}/labels.npy", labels)
     np.save(f"{phase}/images.npy", images)
 
