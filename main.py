@@ -23,7 +23,7 @@ class HighlightModel(nn.Module):
         super(HighlightModel, self).__init__()
         self.resnet = resnet18(weights=resnet_weights)
         self.fc_to_lstm = nn.Linear(1000, 256)
-        self.lstm = nn.LSTM(input_size=256, hidden_size=256, num_layers=2, batch_first=True)
+        self.lstm = nn.LSTM(input_size=256, hidden_size=256, num_layers=2, dropout=0.2, batch_first=True)
         self.fc1 = nn.Linear(256, 128)
         self.fc2 = nn.Linear(128, 2)
         self.softmax = nn.Softmax(dim=1)
