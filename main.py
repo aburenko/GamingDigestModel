@@ -71,7 +71,7 @@ def train(model: HighlightModel, loader_train: DataLoader, loader_test: DataLoad
     is_slurm = True
     tqdm_out = open(os.devnull, 'w') if is_slurm else None
     loss_fn = nn.BCELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=0.2)
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
     n_epochs = 50
     for epoch in range(n_epochs):

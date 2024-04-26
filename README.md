@@ -1,7 +1,16 @@
 # GamingDigestModel (Proof of Concept)
-Find highlights in a game video stream recoding on example of DayZ Streams using ResNet18 and LSTM. 
+Finds highlights in a game video stream recoding on example of DayZ Streams using ResNet18 and LSTM. 
 
-This project is just a Proof of Concept and thus contains hardcoded values etc.
+This project is just a Proof of Concept and thus contains hardcoded values and it not expected to provide perfect results.
+
+## Idea
+Once I have heard streamer say that he would give a lot for a model that compiles
+raw streams into video with highlights. This project adresses the issue and creates a MWP
+for such a problem.
+
+Example of integration: App which takes a stream as an input and provides interface for quickly 
+creating compilation videos for a YouTube channel. Such a service can potentially be sold for a small fee and 
+provide a great use for a streamer.
 
 ## Pipeline
 We take an example video: https://www.youtube.com/watch?v=kt8wMx_c22g
@@ -33,8 +42,18 @@ Therefore the not highlight parts in the train set are reduced to be more balanc
 - test with 17968 frames
 - train with 16045 frames
 
-The CNN+LSTN model is trained for 50 epochs on GPU. Results:
+The CNN+LSTN model is trained for 50 epochs on GPU. Results (as in slurm-446457.out) are shown for epoch 16 because
+the model seems to only overfit onwards:
 
+| Dataset  | Precision | Recall | Correct Guesses / Total |
+|----------|-----------|--------|-------------------------|
+| TRAIN    | 0.910     | 0.339  | 1153/3403 = 0.34        |
+| TEST     | 0.024     | 0.229  | 222/968 = 0.23          |
+
+The recall is already quite good considering that the highlights where labeled "quick and dirty" per frame. Further
+splitting frames into blocks can improve recall a lot and will address the initial streamer-platform idea much better!
+
+The idea is promising and can be explored in the future!
 
 ## Future possibilities
 - Create automatic data labeling, e.g. find stream/highlight videos pairs and create automatic matching 
