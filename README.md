@@ -60,7 +60,8 @@ This made it for the model difficult to converge and therefore dropout was intro
 to a significant improvement. Finally, we unfreeze the ResNet and try again. The network fails to generalize again.
 
 Further splitting frames into blocks can simplify the task a lot and will address the initial streamer-platform idea
-much better. Changing the approach shows significant benefit:
+much better. We use half-minute block. A block is a highlight if any frame inside it is a highlight. 
+Changing the approach shows significant benefit:
 
 | Dataset | Precision | Recall      |
 |---------|-----------|-------------|
