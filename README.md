@@ -2,7 +2,7 @@
 
 Finds highlights in a game video stream recoding on example of DayZ Streams using ResNet18 and LSTM.
 
-Please note: this project is just a Proof of Concept.
+Please note: this project is just a Proof of Concept. Thus, the values are hardcoded and no configs are provided.
 
 ## Idea
 
@@ -59,19 +59,23 @@ It seems like the model predicts all samples as highlight, so L2-norm was tried 
 This made it for the model difficult to converge and therefore dropout was introduced to LSTM. This also didn't lead
 to a significant improvement. Finally, we unfreeze the ResNet and try again. The network fails to generalize again.
 
+Further splitting frames into blocks can simplify the task a lot and will address the initial streamer-platform idea
+much better. Changing the approach shows significant benefit:
+
+| Dataset | Precision | Recall      |
+|---------|-----------|-------------|
+| TRAIN   | 1.0       | 48/48 = 1.0 |
+| TEST    | 0.125     | 6/14 = 0.43 |
+
 ### Conclusion and Future work
 
-It looks like the sample size is still too small to properly generalize with using barely the images. 
+It looks like the sample size is still too small to properly generalize with using barely the 4h video.
 The labeling is costly.
 As a solution an automatic data labeling could be developed, e.g. find stream/highlight videos pairs and create
-automatic matching. 
+automatic matching.
 
 Moreover, the sound is ignored for now. This could bring a lot of improvement since gunshots is often a signifier for
 a highlight!
-
-Further splitting frames into blocks can simplify the task a lot and will address the initial streamer-platform idea
-much better.
-The idea is promising and can be explored in the future!
 
 As for model using VisTR should be considered as it constantly shows better performance in SOTA methods.
 

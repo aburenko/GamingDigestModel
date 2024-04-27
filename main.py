@@ -15,6 +15,8 @@ from torchvision.transforms import transforms
 from sklearn.metrics import precision_score, recall_score
 
 resnet_weights = ResNet18_Weights.IMAGENET1K_V1
+fps = 5
+half_minute = fps * 30
 
 
 class HighlightModel(nn.Module):
@@ -26,7 +28,7 @@ class HighlightModel(nn.Module):
         self.lstm = nn.LSTM(input_size=256, hidden_size=256, num_layers=2, dropout=0.2, batch_first=True)
         self.fc1 = nn.Linear(256, 128)
         self.fc2 = nn.Linear(128, 2)
-        self.softmax = nn.Softmax(dim=1)
+        self.softmax = nn.Softmax(dim=0)
 
     def forward(self, x):
         """The inputs are batched images of size (sequence size, channels, height, width)"""
@@ -35,8 +37,7 @@ class HighlightModel(nn.Module):
 
         x = self.fc_to_lstm(x)
         x, _ = self.lstm(x)
-
-        x = self.fc1(x)
+        x = self.fc1(x[-1, :])
         x = F.relu(x)
         x = self.fc2(x)
         return self.softmax(x)
@@ -62,8 +63,8 @@ class StreamDataset(Dataset):
 
 
 def get_loaders(root="data"):
-    train_dataloader = DataLoader(StreamDataset(root, "train"), batch_size=16, shuffle=False, num_workers=2)
-    test_dataloader = DataLoader(StreamDataset(root, "test"), batch_size=100, shuffle=False, num_workers=2)
+    train_dataloader = DataLoader(StreamDataset(root, "train"), batch_size=half_minute, shuffle=False, num_workers=8)
+    test_dataloader = DataLoader(StreamDataset(root, "test"), batch_size=half_minute, shuffle=False, num_workers=8)
     return train_dataloader, test_dataloader
 
 
@@ -80,14 +81,16 @@ def train(model: HighlightModel, loader_train: DataLoader, loader_test: DataLoad
         all_true = []
         all_pred = []
         for i, (image_batch, label_batch) in enumerate(tqdm.tqdm(loader_train, file=tqdm_out)):
+            label = torch.Tensor([int(1 in label_batch)]).long()
+
             prediction = model(image_batch.to(device=device))
-            loss = loss_fn(prediction, F.one_hot(label_batch, num_classes=2).float().to(device=device))
+            loss = loss_fn(prediction, F.one_hot(label, num_classes=2).float().to(device=device)[0])
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            all_pred.extend(torch.argmax(prediction, 1).tolist())
-            all_true.extend(label_batch.tolist())
+            all_pred.append(torch.argmax(prediction, dim=0).item())
+            all_true.append(label[0].item())
         print("TRAIN set:")
         print_stats(all_true, all_pred)
 
@@ -95,10 +98,11 @@ def train(model: HighlightModel, loader_train: DataLoader, loader_test: DataLoad
         all_true = []
         all_pred = []
         for i, (image_batch, label_batch) in enumerate(tqdm.tqdm(loader_test, file=tqdm_out)):
+            label = torch.Tensor([int(1 in label_batch)]).long()
             prediction = model(image_batch.to(device=device))
 
-            all_pred.extend(torch.argmax(prediction, 1).tolist())
-            all_true.extend(label_batch.tolist())
+            all_pred.append(torch.argmax(prediction, dim=0).item())
+            all_true.append(label[0].item())
         print("TEST set:")
         print_stats(all_true, all_pred)
 
